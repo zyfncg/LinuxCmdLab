@@ -18,7 +18,7 @@ int main(){
 		while((entry = readdir(dp)) != NULL){
 			lstat(entry->d_name, &statbuf);
 			info = &statbuf;
-			printf("%s\n", info->st_uid);
+			printf("%d\n", (int)info->st_nlink);
 		}
     }
 
