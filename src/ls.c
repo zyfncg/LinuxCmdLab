@@ -46,47 +46,50 @@ char *ls = "ls";
 char *end = "exit";
 
 
-int main(){
-
-	char cmd[3];
-	char param[256];
-	char dirName[256];
-
-	while(1){
-        //初始化flag
-        flag_a = 0;
-        flag_d = 0;
-        flag_i = 0;
-        flag_l = 0;
-        flag_R = 0;
-        scanf("%s",cmd);
-		if(strcmp(cmd,ls)==0){
-            dirName[0] = '.';
-            dirName[1] = '\0';
-
-            while(isEnd() == 0){
-                if(scanf("%s",param) > 0){
-                    if(param[0]=='-'){
-                        if(set_flag(param)==0){
-                            printf("参数错误！\n");
-                            break;
-                        }
-                    }else{
-                        stpcpy(dirName,param);
-                        break;
-                    }
-                }
-            }
-            execute(dirName);
-		}else if(strcmp(cmd,end)==0){
-			break;
-		}else{
-			printf("输入命令有误，请重新输入\n");
-		}
-	}
-
-	return 0;
-}
+//int main(){
+//
+//	char cmd[3];
+//	char param[256];
+//	char dirName[256];
+//
+//	while(1){
+//        //初始化flag
+//        flag_a = 0;
+//        flag_d = 0;
+//        flag_i = 0;
+//        flag_l = 0;
+//        flag_R = 0;
+//        scanf("%s",cmd);
+//		if(strcmp(cmd,ls)==0){
+//            dirName[0] = '.';
+//            dirName[1] = '\0';
+//            int param_error = 0;
+//            while(isEnd() == 0){
+//                if(scanf("%s",param) > 0){
+//                    if(param[0]=='-'){
+//                        if(set_flag(param)==0){
+//                            printf("参数错误！\n");
+//                            param_error = 1;
+//                            break;
+//                        }
+//                    }else{
+//                        stpcpy(dirName,param);
+//                        break;
+//                    }
+//                }
+//            }
+//            if (param_error == 0){
+//                execute(dirName);
+//            }
+//		}else if(strcmp(cmd,end)==0){
+//			break;
+//		}else{
+//			printf("输入命令有误，请重新输入\n");
+//		}
+//	}
+//
+//	return 0;
+//}
 
 void execute(char dir[]){
     file_stat stats[256];
