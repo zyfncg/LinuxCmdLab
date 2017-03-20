@@ -2,44 +2,98 @@
 #include<dirent.h>
 #include<sys/stat.h>
 #include<sys/types.h>
+#include <time.h>
 #include<string.h>
 #include<pwd.h>
 #include<grp.h>
 char *uid_to_name(uid_t uid);
 char *gid_to_name(uid_t gid);
-void get_modestr(mode_t mode, char modestr[]);
+void get_modestr(mode_t mode, char modestr[]); //获得权限字符串
+void display_dir(char dir[]); //输出目录
+
+int set_flag(char param[]);
+int flag_a;
+int flag_d;
+int flag_i;
+int flag_l;
+int flag_R;
+char *ls = "ls";
+char *end = "exit";
 
 int main(){
-    DIR *dp;
+    
+	char cmd[3];
+	char param[256];
+	char dirname[256];
+	while(1){
+		scanf("%s",cmd);
+		if(strcmp(cmd,ls)==0){
+			int isEnd = 0;
+			while(isEnd == 0){
+				scanf("%s",param);
+				if(param[0]=='-'){
+					if(set_flag(param)==0){
+						printf("参数错误！\n");
+						break;
+					}
+				}else{
+					stpcpy(dirname,param);
+					display_dir(dirname);
+				}
+				isEnd = 1;
+			}
+		}else if(strcmp(cmd,end)==0){
+			break;
+		}else{
+			printf("输入命令有误，请重新输入\n");
+		}
+	}
+	
+	return 0;
+}
+void display_dir(char dir[]){
+	DIR *dp;
     struct dirent *entry;
     struct stat statbuf;
     struct stat *info;
-    char name[256];
+    char path[256];
     char modestr[11];
 
-    char dirname[] = {"linuxlab"};
+    char dirname[256];
+	strcpy(dirname, dir);
     if((dp = opendir(dirname)) == NULL){
-		printf("error\n");
+		printf("No such file or directory\n");
     }else{
 		while((entry = readdir(dp)) != NULL){
-            printf("%s\n", entry->d_name);
-			lstat(entry->d_name, &statbuf);
+            //printf("%s\n", entry->d_name);
+			strcpy(path,dirname);
+			int dir_len = strlen(dirname);
+			if(path[dir_len-1]!='/'){
+				path[dir_len]='/';
+				path[dir_len+1]='\0';
+			}
+			strcat(path,entry->d_name);
+			if(lstat(path, &statbuf)){
+				perror("错误：");
+			}
 			info = &statbuf;
-            strcpy(name,entry->d_name);
             get_modestr(info->st_mode,modestr);
 
-            printf("%d ",(int)info->st_ino);
-            printf("%d ", (int)info->st_nlink);
+            printf("%8d ",(int)info->st_ino);
+            
             printf("%s ", modestr);
+			printf("%2d ", (int)info->st_nlink);
             printf("%9s ", uid_to_name(info->st_uid));
             printf("%9s ", gid_to_name(info->st_gid));
-			printf("%s\n", name);
+			printf("%.12s",ctime(&info->st_mtime)+4);
+			printf("%s\n", entry->d_name);
 		}
         closedir(dp);
     }
-
 }
-
+int set_flag(char param[]){
+	return 1;
+}
 void get_modestr(mode_t mode, char modestr[]){
     strcpy(modestr, "----------");
     if(S_ISDIR(mode)) modestr[0] = 'd'; 
