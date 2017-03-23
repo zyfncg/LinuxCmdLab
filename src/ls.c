@@ -42,54 +42,44 @@ int flag_d;
 int flag_i;
 int flag_l;
 int flag_R;
-char *ls = "ls";
-char *end = "exit";
 
 
-//int main(){
-//
-//	char cmd[3];
-//	char param[256];
-//	char dirName[256];
-//
-//	while(1){
-//        //初始化flag
-//        flag_a = 0;
-//        flag_d = 0;
-//        flag_i = 0;
-//        flag_l = 0;
-//        flag_R = 0;
-//        scanf("%s",cmd);
-//		if(strcmp(cmd,ls)==0){
-//            dirName[0] = '.';
-//            dirName[1] = '\0';
-//            int param_error = 0;
-//            while(isEnd() == 0){
-//                if(scanf("%s",param) > 0){
-//                    if(param[0]=='-'){
-//                        if(set_flag(param)==0){
-//                            printf("参数错误！\n");
-//                            param_error = 1;
-//                            break;
-//                        }
-//                    }else{
-//                        stpcpy(dirName,param);
-//                        break;
-//                    }
-//                }
-//            }
-//            if (param_error == 0){
-//                execute(dirName);
-//            }
-//		}else if(strcmp(cmd,end)==0){
-//			break;
-//		}else{
-//			printf("输入命令有误，请重新输入\n");
-//		}
-//	}
-//
-//	return 0;
-//}
+int main(int argc, char *argv[]){
+
+	char dirName[256];
+
+    //初始化flag
+    flag_a = 0;
+    flag_d = 0;
+    flag_i = 0;
+    flag_l = 0;
+    flag_R = 0;
+    dirName[0] = '.';
+    dirName[1] = '\0';
+    int isDefauleDir = 1;
+    if(argc > 1){
+        for (int i = 1; i < argc; ++i) {
+//            printf("%s\n", argv[i]);
+            if(argv[i][0]=='-'){
+                if(set_flag(argv[i])==0){
+                    printf("参数错误！\n");
+                    break;
+                }
+            }else{
+                isDefauleDir = 0;
+                stpcpy(dirName,argv[i]);
+                execute(dirName);
+            }
+        }
+        if(isDefauleDir == 1){
+            execute(dirName);
+        }
+    }else{
+        execute(dirName);
+    }
+
+	return 0;
+}
 
 void execute(char dir[]){
     file_stat stats[256];
@@ -116,22 +106,43 @@ int get_stats(char dir[], file_stat stats[]){
     char dirname[256];
     int count = 0;
     strcpy(dirname, dir);
-    if((dp = opendir(dirname)) == NULL){
-        printf("No such file or directory\n");
-    }else{
-        while((entry = readdir(dp)) != NULL){
-            strcpy(path,dirname);
-            strcpy(full_name,dirname);
-            int dir_len = strlen(dirname);
-            if(full_name[dir_len-1]!='/'){
-                full_name[dir_len]='/';
-                full_name[dir_len+1]='\0';
+    if(lstat(dirname, &statbuf)==0){
+        if(S_ISDIR(statbuf.st_mode)){
+            if((dp = opendir(dirname)) == NULL){
+                printf("No such file or directory\n");
+            }else{
+                while((entry = readdir(dp)) != NULL){
+                    strcpy(path,dirname);
+                    strcpy(full_name,dirname);
+                    int dir_len = strlen(dirname);
+                    if(full_name[dir_len-1]!='/'){
+                        full_name[dir_len]='/';
+                        full_name[dir_len+1]='\0';
+                    }
+                    strcat(full_name,entry->d_name);
+                    if(lstat(full_name, &statbuf)){
+                        perror("错误：");
+                        return 0;
+                    }
+                    get_modeStr(statbuf.st_mode, modestr);
+                    stats[count].i_node = statbuf.st_ino;
+                    stats[count].file_mode = statbuf.st_mode;
+                    strcpy(stats[count].mode,modestr);
+                    stats[count].link_num = statbuf.st_nlink;
+                    strcpy(stats[count].owner,uid_to_name(statbuf.st_uid));
+                    strcpy(stats[count].group,gid_to_name(statbuf.st_gid));
+                    strcpy(stats[count].mod_time,ctime(&(statbuf.st_mtime))+4);
+                    stats[count].size = statbuf.st_size;
+                    strcpy(stats[count].name,entry->d_name);
+                    strcpy(stats[count].full_name,full_name);
+                    strcpy(stats[count].path,path);
+
+                    count++;
+                }
+                closedir(dp);
+                sort_files(stats,count);
             }
-            strcat(full_name,entry->d_name);
-            if(lstat(full_name, &statbuf)){
-                perror("错误：");
-                return 0;
-            }
+        } else{
             get_modeStr(statbuf.st_mode, modestr);
             stats[count].i_node = statbuf.st_ino;
             stats[count].file_mode = statbuf.st_mode;
@@ -141,15 +152,13 @@ int get_stats(char dir[], file_stat stats[]){
             strcpy(stats[count].group,gid_to_name(statbuf.st_gid));
             strcpy(stats[count].mod_time,ctime(&(statbuf.st_mtime))+4);
             stats[count].size = statbuf.st_size;
-            strcpy(stats[count].name,entry->d_name);
-            strcpy(stats[count].full_name,full_name);
-            strcpy(stats[count].path,path);
-
+            strcpy(stats[count].name,dirname);
+            strcpy(stats[count].full_name,dirname);
+            strcpy(stats[count].path,"\0");
             count++;
         }
-        closedir(dp);
-        sort_files(stats,count);
     }
+
     return count;
 }
 void sort_files(file_stat stats[], int size){

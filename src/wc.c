@@ -1,23 +1,22 @@
 #include <stdio.h>
-#include <memory.h>
-
+#include <string.h>
 int isWord(char c);//判断是否是单词的一个字母
 void show_file_info(char file_name[]);
-int main(){
-    char file_name[256]="/home/zyfncg/CLionProjects/LinuxCMD/linuxlab/file2";
-    char cmd[10];
-    while (1){
-        scanf("%s",cmd);
-        if(strcmp(cmd,"wc")==0){
-            scanf("%s",file_name);
+int total_chars,total_lines,total_words;
+int main(int argc, char *argv[]){
+    total_chars = 0;
+    total_lines = 0;
+    total_words = 0;
+    char file_name[256];
+    if(argc > 1){
+        for (int i = 1; i < argc; ++i) {
+            strcpy(file_name,argv[i]);
             show_file_info(file_name);
-        } else if(strcmp(cmd,"exit")==0){
-            break;
-        } else{
-            printf("命令输入错误，请重新输入\n");
+        }
+        if(argc>2){
+            printf("%d %d %d 总用量\n",total_lines,total_words,total_chars);
         }
     }
-
     return 0;
 }
 void show_file_info(char file_name[]){
@@ -49,6 +48,9 @@ void show_file_info(char file_name[]){
             words++;
         }
     }
+    total_chars+=chars;
+    total_lines+=lines;
+    total_words+=words;
     fclose(file);
     printf("%d %d %d %s\n",lines,words,chars,file_name);
 }
